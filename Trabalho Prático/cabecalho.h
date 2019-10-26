@@ -57,19 +57,18 @@
 #define BG_CYAN(string)    ANSI_BG_COLOR_CYAN    string ANSI_RESET
 #define BG_WHITE(string)   ANSI_BG_COLOR_WHITE   string ANSI_RESET
 
-#define MAX 100
+#define MAX 1000
 
 int main();
-int check(int i, int j, int n, int m);
-void imprimeCampo(char campo[MAX][MAX], int n, int m);
-void criaJogoAleatorio(char campo[MAX][MAX], char nivel[]);
 void menuInicial();
-void inicializa(char campo[MAX][MAX], int n, int m);
+void jogarNovamente();
 void printCor(char valor);
-void colocaBombas(char resolvido[MAX][MAX], int n, int m, int bombas);
+void inicializa(char campo[MAX][MAX], int n, int m);
+void imprimeCampo(char campo[MAX][MAX], int n, int m);
 void resolveJogo(char resolvido[MAX][MAX], int n, int m);
+void criaJogoAleatorio(char campo[MAX][MAX], char nivel[]);
+void colocaBombas(char resolvido[MAX][MAX], int n, int m, int bombas);
+void revelaBombas(char campo[MAX][MAX], char resolvido[MAX][MAX], int n, int m);
 void jogar(char campo[MAX][MAX], char resolvido[MAX][MAX], int n, int m, int bombas);
 void marca(char campo[MAX][MAX], char resolvido[MAX][MAX], int n, int m, int x, int y, int *contJogadas);
 void revelaCelulas(char campo[MAX][MAX], char resolvido[MAX][MAX], int n, int m, int x, int y, int *contJogadas);
-void revelaBombas(char campo[MAX][MAX], char resolvido[MAX][MAX], int n, int m);
-void jogarNovamente();

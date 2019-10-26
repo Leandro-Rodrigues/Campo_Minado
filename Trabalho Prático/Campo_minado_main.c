@@ -8,13 +8,13 @@ int main(int argc, char *argv[]) {
     
     // se não tem arquivo de entrada
     do {
-        printf("Digite o nível de dificuldade: [ facil ] [ medio ] [ dificil ]: ");
+        printf(BOLD("DGITE O NÍVEL DE DIFICULDADE: [ FACIL ] [ MEDIO ] [ DIFICIL ]: "));
         scanf("%s", nivel);
-        if (!strcmp(nivel, "facil") || !strcmp(nivel, "medio") || !strcmp(nivel, "dificil"))
+        if (!strcmp(nivel, "FACIL") || !strcmp(nivel, "MEDIO") || !strcmp(nivel, "DIFICIL"))
             ok = 1;
-        else printf("Comando inválido, digite novamente\n");
+        else printf(BOLD("COMANDO INVÁLIDO! DIGITE NOVAMENTE\n"));
     } while (!ok);
-
+    system("clear");
     criaJogoAleatorio(campo, nivel);
     
     return 0;
