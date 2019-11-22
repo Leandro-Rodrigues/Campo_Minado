@@ -1,16 +1,30 @@
 #include "cabecalho.h"
 
-void inicializa(char campo[MAX][MAX], int n, int m) {
+char** alocaMatriz(int n, int m) {
+    char **mat = malloc(n * sizeof(char*));
+    for (int i = 0; i < n; i++) {
+        mat[i] = malloc(m * sizeof(char));
+    }
+    return mat;
+}
+
+void desalocaMatriz(char **mat, int n, int m) {
+    for (int i = 0; i < n; i++)
+        free(mat[i]);
+    free(mat);
+}
+
+void inicializa(char **campo, int n, int m) {
     for (int i = 0; i < n; i++)
         for (int j = 0; j < m; j++)
             campo[i][j] = '-';
 }
 
-void revelaBombas(char campo[MAX][MAX], char resolvido[MAX][MAX], int n, int m) {
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < m; j++) {
-            if (resolvido[i][j] == 'B')
-                campo[i][j] = 'B';
+void revelaBombas(Dados *dadosJogo) {
+    for (int i = 0; i < dadosJogo->n; i++) {
+        for (int j = 0; j < dadosJogo->m; j++) {
+            if (dadosJogo->resolvido[i][j] == 'B')
+                dadosJogo->campo[i][j] = 'B';
         }
     }
 }
@@ -33,10 +47,9 @@ void menuInicial() {
     printf(TAB_BR "\n");
 }
 
-void criaJogoAleatorio(char campo[MAX][MAX], char nivel[]) {
+void criaJogoAleatorio(Dados *dadosJogo, char nivel[]) {
     int n, m;
     int bombas;
-    char resolvido[MAX][MAX];
     
     if (!strcmp(nivel, "FACIL")) {
         n = 5;
@@ -54,66 +67,61 @@ void criaJogoAleatorio(char campo[MAX][MAX], char nivel[]) {
         bombas = 70;
     }
     
-    inicializa(campo, n, m);
-    inicializa(resolvido, n, m);
-    colocaBombas(resolvido, n, m, bombas);
-    resolveJogo(resolvido, n, m);
-    jogar(campo, resolvido, n, m, bombas);
+    dadosJogo->n = n;
+    dadosJogo->m = m;
+    
+    // alocando matrizes
+    dadosJogo->campo = alocaMatriz(n, m);
+    dadosJogo->resolvido = alocaMatriz(n, m);
+    
+    inicializa(dadosJogo->campo, dadosJogo->n, dadosJogo->m);
+    inicializa(dadosJogo->resolvido, dadosJogo->n, dadosJogo->m);
+    colocaBombas(dadosJogo, bombas);
+    resolveJogo(dadosJogo->resolvido, dadosJogo->n, dadosJogo->m);
+    jogar(dadosJogo, bombas);
 }
 
-void colocaBombas(char resolvido[MAX][MAX], int n, int m, int bombas) {
+void colocaBombas(Dados *dadosJogo, int bombas) {
     srand(time(NULL));
     int i = 0;
     
     while (i < bombas) {
-        int x = random() % n;
-        int y = random() % m;
+        int x = random() % dadosJogo->n;
+        int y = random() % dadosJogo->m;
         
-        if (resolvido[x][y] == '-') {
-            resolvido[x][y] = 'B';
+        if (dadosJogo->resolvido[x][y] == '-') {
+            dadosJogo->resolvido[x][y] = 'B';
             i++;
         }
     }
 }
 
-void jogarNovamente() {
-    char op[15];
-    do {
-        printf(BOLD("DESEJA JOGAR NOVAMENTE? [SIM] [NAO]: "));
-        scanf("%s", op);
-        
-        if (strcmp(op, "SIM") && strcmp(op, "NAO"))
-            printf(BOLD("COMANDO INVÁLIDO! DIGITE SIM OU NAO\n"));
-        else if (!strcmp(op, "SIM"))
-            main();
-        else exit(0);
-    } while (strcmp(op, "SIM") && strcmp(op, "NAO"));
-}
+void marca(Dados *dadosJogo, int x, int y, int *contJogadas) {
+    if (dadosJogo->resolvido[x][y] == '-')
+        revelaCelulas(dadosJogo, x, y, contJogadas);
 
-void marca(char campo[MAX][MAX], char resolvido[MAX][MAX], int n, int m, int x, int y, int *contJogadas) {
-    if (resolvido[x][y] == '-')
-        revelaCelulas(campo, resolvido, n, m, x, y, contJogadas);
-
-    else if (resolvido[x][y] == 'B') {
+    else if (dadosJogo->resolvido[x][y] == 'B') {
         system("clear");
         
         // imprime onde estao as bombas
         printf(RED(BOLD("               BOMBA!!!\n")));
-        revelaBombas(campo, resolvido, n, m);
-        imprimeCampo(campo, n, m);
-        jogarNovamente();
+        revelaBombas(dadosJogo);
+        imprimeCampo(dadosJogo->campo, dadosJogo->n, dadosJogo->m);
+        desalocaMatriz(dadosJogo->campo, dadosJogo->n, dadosJogo->m);
+        desalocaMatriz(dadosJogo->resolvido, dadosJogo->n, dadosJogo->m);
+        exit(0);
     }
     else {
-        campo[x][y] = resolvido[x][y];
+        dadosJogo->campo[x][y] = dadosJogo->resolvido[x][y];
         *contJogadas = *contJogadas + 1;
     }
         
 }
 
-void revelaCelulas(char campo[MAX][MAX], char resolvido[MAX][MAX], int n, int m, int x, int y, int *contJogadas) {
+void revelaCelulas(Dados *dadosJogo, int x, int y, int *contJogadas) {
     *contJogadas = *contJogadas + 1;
-    campo[x][y] = ' ';
-    resolvido[x][y] = ' ';
+    dadosJogo->campo[x][y] = ' ';
+    dadosJogo->resolvido[x][y] = ' ';
     
     int dx[] = {0, -1, 0, 1, 1, 1, -1, -1};
     int dy[] = {1, 0, -1, 0, -1, 1, 1, -1};
@@ -121,21 +129,24 @@ void revelaCelulas(char campo[MAX][MAX], char resolvido[MAX][MAX], int n, int m,
     for (int i = 0; i < 8; i++) {
         int linha = x + dx[i];
         int coluna = y + dy[i];
-        if (linha >= 0 && coluna >= 0 && linha < n && coluna < m) {
-            if (resolvido[linha][coluna] == '-')
-                revelaCelulas(campo, resolvido, n, m, linha, coluna, contJogadas);
+        if (linha >= 0 && coluna >= 0 && linha < dadosJogo->n && coluna < dadosJogo->m) {
+            if (dadosJogo->resolvido[linha][coluna] == '-')
+                revelaCelulas(dadosJogo, linha, coluna, contJogadas);
             else {
-                if (campo[linha][coluna] == '-')
+                if (dadosJogo->campo[linha][coluna] == '-')
                     *contJogadas = *contJogadas + 1;
-                campo[linha][coluna] = resolvido[linha][coluna];
+                dadosJogo->campo[linha][coluna] = dadosJogo->resolvido[linha][coluna];
             }
         }
     }
 }
 
-void imprimeCampo(char campo[MAX][MAX], int n, int m) {
+// Funções de Impressão
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+void imprimeCampo(char **campo, int n, int m) {
     // Imprime linhas em cima
-    printf("   ");
+    printf("\n   ");
     for (char i = 'A'; i < (char) m + 65; i++)
         printf("%c  ", i);
     printf("\n  ");
@@ -196,11 +207,11 @@ void printCor(char valor) {
     else if (valor == '4')
         printf(CYAN(BOLD("4 ")));
     else if (valor == '5')
-        printf(BLACK(BOLD("5 ")));
+        printf(YELLOW(BOLD("5 ")));
     else if (valor == '6')
         printf(MAGENTA(BOLD("6 ")));
     else if (valor == '7')
-        printf(YELLOW(BOLD("7 ")));
+        printf(BLACK(BOLD("7 ")));
     else if (valor == '8')
         printf(WHITE(BOLD("8 ")));
     else if (valor == 'B')
@@ -210,31 +221,35 @@ void printCor(char valor) {
     else if (valor == '-') printf(BOLD("- "));
     else printf(BOLD("X "));
 }
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-void jogar(char campo[MAX][MAX], char resolvido[MAX][MAX], int n, int m, int bombas) {
+void jogar(Dados *dadosJogo, int bombas) {
     char opcao[15];
+    char coordenadas[15];
     int contJogadas = 0;
     
     while (1) {
         // Confere se terminou o jogo
-        if (contJogadas == (n * m) - bombas) {
-            printf(GREEN(BOLD("               PARABÉNS, VOCÊ VENCEU!!!\n")));
-            imprimeCampo(campo, n, m);
-            jogarNovamente();
+        if (contJogadas == (dadosJogo->n * dadosJogo->m) - bombas) {
+            printf(GREEN(BOLD("               PARABÉNS, VOCÊ VENCEU!!!")));
+            imprimeCampo(dadosJogo->campo, dadosJogo->n, dadosJogo->m);
+            desalocaMatriz(dadosJogo->campo, dadosJogo->n, dadosJogo->m);
+            desalocaMatriz(dadosJogo->resolvido, dadosJogo->n, dadosJogo->m);
+            exit(0);
         }
         
         // Caso não tenha ganhado ainda
         int ok = 1;
-        imprimeCampo(campo, n, m);
+        imprimeCampo(dadosJogo->campo, dadosJogo->n, dadosJogo->m);
         printf(BOLD("\n           DIGITE UM DOS COMANDOS:\n") TAB_TL);
         for (int i = 0; i < 45; i++)
             printf(TAB_HOR);
         printf(TAB_TR "\n");
-        printf(TAB_VER BOLD("X        -> MARCAR UM MINA                   ") TAB_VER "\n");
-        printf(TAB_VER BOLD("O        -> REVELAR O VALOR DE UMA CÉLULA    ") TAB_VER "\n");
-        printf(TAB_VER BOLD("RESOLVER -> RESOLVE O JOGO ALTOMATICAMENTE   ") TAB_VER "\n");
-        printf(TAB_VER BOLD("SALVAR   -> SALVAR O JOGO                    ") TAB_VER "\n");
-        printf(TAB_VER BOLD("SAIR     -> ENCERRA O PROGRAMA               ") TAB_VER "\n");
+        printf(TAB_VER BOLD("x        -> MARCAR UM MINA                   ") TAB_VER "\n");
+        printf(TAB_VER BOLD("o        -> REVELAR O VALOR DE UMA CÉLULA    ") TAB_VER "\n");
+        printf(TAB_VER BOLD("resolver -> RESOLVE O JOGO AUTOMATICAMENTE   ") TAB_VER "\n");
+        printf(TAB_VER BOLD("salvar   -> SALVAR O JOGO                    ") TAB_VER "\n");
+        printf(TAB_VER BOLD("sair     -> ENCERRA O PROGRAMA               ") TAB_VER "\n");
         printf(TAB_BL);
         for (int i = 0; i < 45; i++)
             printf(TAB_HOR);
@@ -242,83 +257,101 @@ void jogar(char campo[MAX][MAX], char resolvido[MAX][MAX], int n, int m, int bom
         
         do {
             scanf("%s", opcao);
-            if (!strcmp(opcao, "SAIR"))
+            if (!strcmp(opcao, "sair"))
                 exit(0);
             
             // Marcar uma bomba
-            else if (!strcmp(opcao, "X")) {
-                char x, y;
+            else if (!strcmp(opcao, "x")) {
                 int pode = 1;
                 int lin, col;
                 
                 printf(BOLD("DIGITE A LINHA E COLUNA PARA MARCAR UMA BOMBA: "));
                 do {
                     pode = 1;
-                    scanf("\n%c %c", &x, &y);
-
-                    lin = (int) x - 65;
-                    col = (int) y - 65;
-                    if (lin < 0 || lin >= n || col < 0 || col >= m) {
+                    scanf("%s", coordenadas);
+                    lin = (int) coordenadas[0] - 65;
+                    col = (int) coordenadas[1] - 65;
+                    
+                    if (lin < 0 || lin >= dadosJogo->n || col < 0 || col >= dadosJogo->m) {
                         printf(BOLD("ESSA POSIÇÃO NÃO EXISTE! DIGITE NOVAMENTE: "));
                         pode = 0;
                     }
-                    else if (campo[lin][col] != '-') {
+                    else if (dadosJogo->campo[lin][col] != '-') {
                         printf(BOLD("ESSA POSIÇÃO JÁ FOI REVELADA! DIGITE OUTRA: "));
                         pode = 0;
                     }
-                    //fflush(stdin);
                 } while (!pode);
-                campo[lin][col] = 'X';
+                dadosJogo->campo[lin][col] = 'X';
             }
             
             // Revelar uma célula
-            else if (!strcmp(opcao, "O")) {
-                char x, y;
+            else if (!strcmp(opcao, "o")) {
                 int pode = 1;
                 int lin, col;
                 
                 printf(BOLD("DIGITE A LINHA E COLUNA A SER REVELADA: "));
                 do {
                     pode = 1;
-                    scanf("\n%c %c", &x, &y);
-                    lin = (int) x - 65;
-                    col = (int) y - 65;
-                    if (lin < 0 || lin >= n || col < 0 || col >= m) {
+                    scanf("%s", coordenadas);
+                    lin = (int) coordenadas[0] - 65;
+                    col = (int) coordenadas[1] - 65;
+                    
+                    if (lin < 0 || lin >= dadosJogo->n || col < 0 || col >= dadosJogo->m) {
                         printf(BOLD("ESSA POSIÇÃO NÃO EXISTE! DIGITE NOVAMENTE: "));
                         pode = 0;
                     }
-                    else if (campo[lin][col] != '-') {
+                    else if (dadosJogo->campo[lin][col] != '-') {
                         printf(BOLD("ESSA POSIÇÃO JÁ FOI REVELADA! DIGITE OUTRA: "));
                         pode = 0;
                     }
-                    //fflush(stdin);
                 } while (!pode);
-                marca(campo, resolvido, n, m, lin, col, &contJogadas);
+                marca(dadosJogo, lin, col, &contJogadas);
             }
             
             // Salvar jogo
-            else if (!strcmp(opcao, "SALVAR")) {
+            else if (!strcmp(opcao, "salvar")) {
+                char nomeArquivo[15];
+                printf("Digite o nome do arquivo para ser salvo: ");
+                scanf("%s", nomeArquivo);
                 
+                // Criando um arquivo para o salvar o jogo em andamento
+                FILE *andamento = fopen(nomeArquivo, "w");
+                
+                // Escrevendo os dados no arquivo
+                fprintf(andamento, "%d %d\n\n", dadosJogo->n, dadosJogo->m);
+                for (int i = 0; i < dadosJogo->n; i++) {
+                    for (int j = 0; j < dadosJogo->m; j++) {
+                        if (j) fprintf(andamento, " ");
+                        if (dadosJogo->campo[i][j] == 'X')
+                            fprintf(andamento, "x");
+                        else if (dadosJogo->campo[i][j] == '-')
+                            fprintf(andamento, "-");
+                        else fprintf(andamento, "o");
+                    }
+                    fprintf(andamento, "\n");
+                }
+                // Salvar jogo resolvido
+                exit(0);
             }
             
             // Resolver jogo
-            else if (!strcmp(opcao, "RESOLVER")) {
+            else if (!strcmp(opcao, "resolver")) {
                 system("clear");
-                imprimeCampo(resolvido, n, m);
-                jogarNovamente();
+                imprimeCampo(dadosJogo->resolvido, dadosJogo->n, dadosJogo->m);
+                exit(0);
             }
             
+            // Difgitou um comando inválido
             else {
                 printf(BOLD("COMANDO INVÁLIDO! DIGITE NOVAMENTE: "));
                 ok = 0;
             }
-            //fflush(stdin);
         } while (!ok);
         system("clear");
     }
 }
 
-void resolveJogo(char resolvido[MAX][MAX], int n, int m) {
+void resolveJogo(char **resolvido, int n, int m) {
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < m; j++) {
             if (resolvido[i][j] == 'B') {

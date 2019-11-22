@@ -57,18 +57,23 @@
 #define BG_CYAN(string)    ANSI_BG_COLOR_CYAN    string ANSI_RESET
 #define BG_WHITE(string)   ANSI_BG_COLOR_WHITE   string ANSI_RESET
 
-#define MAX 1000
+typedef struct {
+    char **campo;
+    char **resolvido;
+    int n, m;
+} Dados;
 
-int main();
+// Prototipo das funções
 void menuInicial();
-void jogarNovamente();
 void printCor(char valor);
-void inicializa(char campo[MAX][MAX], int n, int m);
-void imprimeCampo(char campo[MAX][MAX], int n, int m);
-void resolveJogo(char resolvido[MAX][MAX], int n, int m);
-void criaJogoAleatorio(char campo[MAX][MAX], char nivel[]);
-void colocaBombas(char resolvido[MAX][MAX], int n, int m, int bombas);
-void revelaBombas(char campo[MAX][MAX], char resolvido[MAX][MAX], int n, int m);
-void jogar(char campo[MAX][MAX], char resolvido[MAX][MAX], int n, int m, int bombas);
-void marca(char campo[MAX][MAX], char resolvido[MAX][MAX], int n, int m, int x, int y, int *contJogadas);
-void revelaCelulas(char campo[MAX][MAX], char resolvido[MAX][MAX], int n, int m, int x, int y, int *contJogadas);
+char** alocaMatriz(int n, int m);
+void revelaBombas(Dados *dadosJogo);
+void jogar(Dados *dadosJogo, int bombas);
+void inicializa(char **campo, int n, int m);
+void desalocaMatriz(char **mat, int n, int m);
+void imprimeCampo(char **campo, int n, int m);
+void colocaBombas(Dados *dadosJogo, int bombas);
+void resolveJogo(char **resolvido, int n, int m);
+void criaJogoAleatorio(Dados *dadosJogo, char nivel[]);
+void marca(Dados *dadosJogo, int x, int y, int *contJogadas);
+void revelaCelulas(Dados *dadosJogo, int x, int y, int *contJogadas);
