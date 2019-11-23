@@ -1,6 +1,7 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <stdio.h>
 #include <time.h>
 
 // cores e formato de texto
@@ -64,16 +65,18 @@ typedef struct {
 } Dados;
 
 // Prototipo das funções
+void vitoria();
+void derrota();
 void menuInicial();
 void printCor(char valor);
 char **alocaMatriz(int n, int m);
 void revelaBombas(Dados *dadosJogo);
-void jogar(Dados *dadosJogo, int bombas);
 void inicializa(char **campo, int n, int m);
 void desalocaMatriz(char **mat, int n, int m);
 void imprimeCampo(char **campo, int n, int m);
 void colocaBombas(Dados *dadosJogo, int bombas);
 void resolveJogo(char **resolvido, int n, int m);
 void criaJogoAleatorio(Dados *dadosJogo, char nivel[]);
+void jogar(Dados *dadosJogo, int bombas, int contJogadas);
 void marca(Dados *dadosJogo, int x, int y, int *contJogadas);
 void revelaCelulas(Dados *dadosJogo, int x, int y, int *contJogadas);

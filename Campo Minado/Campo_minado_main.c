@@ -30,6 +30,7 @@ int main(int argc, char *argv[]) {
     // Se tem arquivo de entrada
     else {
         int bombas = 0;
+        int reveladas = 0;
         FILE *arquivoResolvido = fopen(argv[1], "r");
             
         // Pegando os valores do arquivo com o jogo resolvido
@@ -61,7 +62,7 @@ int main(int argc, char *argv[]) {
         // Se passou como parâmetro apenas o jogo resolvido
         if (argc == 2) {
             inicializa(dadosJogo.campo, dadosJogo.n, dadosJogo.m);
-            jogar(&dadosJogo, bombas);
+            jogar(&dadosJogo, bombas, 0);
         }
         
         // Se passou como parâmetro o jogo resolvido e um jogo salvo
@@ -77,6 +78,7 @@ int main(int argc, char *argv[]) {
                     if (c == ' ' || c == '\n' || c == EOF)
                         continue;
                     if (c == 'o') {
+                        reveladas++;
                         if (dadosJogo.resolvido[i][j] == '-')
                             dadosJogo.campo[i][j] = ' ';
                         else dadosJogo.campo[i][j] = dadosJogo.resolvido[i][j];
@@ -88,7 +90,7 @@ int main(int argc, char *argv[]) {
                 }
             }
             fclose(arquivoSalvo);
-            jogar(&dadosJogo, bombas);
+            jogar(&dadosJogo, bombas, reveladas);
         }
     }
     

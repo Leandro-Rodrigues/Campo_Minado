@@ -77,7 +77,7 @@ void criaJogoAleatorio(Dados *dadosJogo, char nivel[]) {
     resolveJogo(dadosJogo->resolvido, dadosJogo->n, dadosJogo->m);
     
     // Jogo
-    jogar(dadosJogo, bombas);
+    jogar(dadosJogo, bombas, 0);
 }
 
 void colocaBombas(Dados *dadosJogo, int bombas) {
@@ -103,9 +103,9 @@ void marca(Dados *dadosJogo, int x, int y, int *contJogadas) {
         system("clear");
         
         // Imprime onde estão as bombas
-        printf(RED(BOLD("               BOMBA!!!\n")));
         revelaBombas(dadosJogo);
         imprimeCampo(dadosJogo->campo, dadosJogo->n, dadosJogo->m);
+        derrota();
         desalocaMatriz(dadosJogo->campo, dadosJogo->n, dadosJogo->m);
         desalocaMatriz(dadosJogo->resolvido, dadosJogo->n, dadosJogo->m);
         exit(0);
@@ -116,88 +116,6 @@ void marca(Dados *dadosJogo, int x, int y, int *contJogadas) {
     }
         
 }
-
-// Funções de Impressão
-//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-
-void imprimeCampo(char **campo, int n, int m) {
-    // Imprime linhas em cima
-    printf("\n   ");
-    for (char i = 'A'; i < (char) m + 65; i++)
-        printf("%c  ", i);
-    printf("\n  ");
-    
-    printf(TAB_TL);
-    for (int i = 0; i < m ; i++) {
-        printf(TAB_HOR TAB_HOR);
-        if (i < m - 1)
-            printf(TAB_TJ);
-    }
-    printf(TAB_TR "\n");
-    
-    // Imprime o meio do campo
-    int lin = 0, col = 0;
-    for (int i = 0; i < 2 * n - 1; i++) {
-        if (i % 2)
-            printf("  " TAB_ML);
-        else {
-            printf("%c ", lin + 65);
-            printf(TAB_VER);
-        }
-        
-        for (int j = 0; j < m; j++) {
-            if (i % 2) printf(TAB_HOR TAB_HOR);
-            else printCor(campo[lin][col++]);
-            if (j < m - 1) {
-                if (i % 2) printf(TAB_MJ);
-                else printf(TAB_VER);
-            }
-        }
-        
-        if (i % 2) printf(TAB_MR);
-        else {
-            printf(TAB_VER);
-            lin++;
-        }
-        col = 0;
-        printf("\n");
-    }
-    
-    // Imprime linhas em baixo
-    printf("  " TAB_BL);
-    for (int i = 0; i < m; i++) {
-        printf(TAB_HOR TAB_HOR);
-        if (i < m - 1)
-            printf(TAB_BJ);
-    }
-    printf(TAB_BR "\n");
-}
-
-void printCor(char valor) {
-    if (valor == '1')
-        printf(BLUE(BOLD("1 ")));
-    else if (valor == '2')
-        printf(GREEN(BOLD("2 ")));
-    else if (valor == '3')
-        printf(RED(BOLD("3 ")));
-    else if (valor == '4')
-        printf(CYAN(BOLD("4 ")));
-    else if (valor == '5')
-        printf(YELLOW(BOLD("5 ")));
-    else if (valor == '6')
-        printf(MAGENTA(BOLD("6 ")));
-    else if (valor == '7')
-        printf(BLACK(BOLD("7 ")));
-    else if (valor == '8')
-        printf(WHITE(BOLD("8 ")));
-    else if (valor == 'B')
-        printf(BG_RED(BOLD("B ")));
-    else if (valor == ' ')
-        printf("  ");
-    else if (valor == '-') printf(BOLD("- "));
-    else printf(BOLD("X "));
-}
-//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 void revelaCelulas(Dados *dadosJogo, int x, int y, int *contJogadas) {
     *contJogadas = *contJogadas + 1;
@@ -222,18 +140,17 @@ void revelaCelulas(Dados *dadosJogo, int x, int y, int *contJogadas) {
     }
 }
 
-void jogar(Dados *dadosJogo, int bombas) {
+void jogar(Dados *dadosJogo, int bombas, int contJogadas) {
     char opcao[15];
     char coordenadas[15];
-    int contJogadas = 0;
     
     while (1) {
         int ok = 1;
 
         // Confere se terminou o jogo
         if (contJogadas == (dadosJogo->n * dadosJogo->m) - bombas) {
-            printf(GREEN(BOLD("               PARABÉNS, VOCÊ VENCEU!!!")));
             imprimeCampo(dadosJogo->campo, dadosJogo->n, dadosJogo->m);
+            vitoria();
             desalocaMatriz(dadosJogo->campo, dadosJogo->n, dadosJogo->m);
             desalocaMatriz(dadosJogo->resolvido, dadosJogo->n, dadosJogo->m);
             exit(0);
@@ -247,11 +164,11 @@ void jogar(Dados *dadosJogo, int bombas) {
             for (int i = 0; i < 45; i++)
                 printf(TAB_HOR);
             printf(TAB_TR "\n");
-            printf(TAB_VER BOLD("x        -> MARCAR UM MINA                   ") TAB_VER "\n");
-            printf(TAB_VER BOLD("o        -> REVELAR O VALOR DE UMA CÉLULA    ") TAB_VER "\n");
-            printf(TAB_VER BOLD("resolver -> RESOLVE O JOGO AUTOMATICAMENTE   ") TAB_VER "\n");
-            printf(TAB_VER BOLD("salvar   -> SALVAR O JOGO                    ") TAB_VER "\n");
-            printf(TAB_VER BOLD("sair     -> ENCERRA O PROGRAMA               ") TAB_VER "\n");
+            printf(TAB_VER BOLD("x        - MARCAR UM MINA                    ") TAB_VER "\n");
+            printf(TAB_VER BOLD("o        - REVELAR O VALOR DE UMA CÉLULA     ") TAB_VER "\n");
+            printf(TAB_VER BOLD("resolver - RESOLVE O JOGO AUTOMATICAMENTE    ") TAB_VER "\n");
+            printf(TAB_VER BOLD("salvar   - SALVAR O JOGO                     ") TAB_VER "\n");
+            printf(TAB_VER BOLD("sair     - ENCERRA O PROGRAMA                ") TAB_VER "\n");
             printf(TAB_BL);
             for (int i = 0; i < 45; i++)
                 printf(TAB_HOR);
@@ -280,7 +197,7 @@ void jogar(Dados *dadosJogo, int bombas) {
                         pode = 0;
                     }
                     else if (dadosJogo->campo[lin][col] != '-') {
-                        printf(BOLD("ESSA POSIÇÃO JÁ FOI REVELADA! DIGITE OUTRA: "));
+                        printf(BOLD("ESSA POSIÇÃO JÁ FOI MARCADA! DIGITE OUTRA: "));
                         pode = 0;
                     }
                 } while (!pode);
@@ -303,7 +220,7 @@ void jogar(Dados *dadosJogo, int bombas) {
                         printf(BOLD("ESSA POSIÇÃO NÃO EXISTE! DIGITE NOVAMENTE: "));
                         pode = 0;
                     }
-                    else if (dadosJogo->campo[lin][col] != '-') {
+                    else if (dadosJogo->campo[lin][col] != '-' && dadosJogo->campo[lin][col] != 'X') {
                         printf(BOLD("ESSA POSIÇÃO JÁ FOI REVELADA! DIGITE OUTRA: "));
                         pode = 0;
                     }
@@ -465,3 +382,149 @@ void resolveJogo(char **resolvido, int n, int m) {
         }
     }
 }
+
+// Funções de Impressão
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+void imprimeCampo(char **campo, int n, int m) {
+    // Imprime linhas em cima
+    printf("\n   ");
+    for (char i = 'A'; i < (char) m + 65; i++)
+        printf("%c  ", i);
+    printf("\n  ");
+    
+    printf(TAB_TL);
+    for (int i = 0; i < m ; i++) {
+        printf(TAB_HOR TAB_HOR);
+        if (i < m - 1)
+            printf(TAB_TJ);
+    }
+    printf(TAB_TR "\n");
+    
+    // Imprime o meio do campo
+    int lin = 0, col = 0;
+    for (int i = 0; i < 2 * n - 1; i++) {
+        if (i % 2)
+            printf("  " TAB_ML);
+        else {
+            printf("%c ", lin + 65);
+            printf(TAB_VER);
+        }
+        
+        for (int j = 0; j < m; j++) {
+            if (i % 2) printf(TAB_HOR TAB_HOR);
+            else printCor(campo[lin][col++]);
+            if (j < m - 1) {
+                if (i % 2) printf(TAB_MJ);
+                else printf(TAB_VER);
+            }
+        }
+        
+        if (i % 2) printf(TAB_MR);
+        else {
+            printf(TAB_VER);
+            lin++;
+        }
+        col = 0;
+        printf("\n");
+    }
+
+    // Imprime linhas em baixo
+    printf("  " TAB_BL);
+    for (int i = 0; i < m; i++) {
+        printf(TAB_HOR TAB_HOR);
+        if (i < m - 1)
+            printf(TAB_BJ);
+    }
+    printf(TAB_BR "\n");
+}
+
+void printCor(char valor) {
+    if (valor == '1')
+        printf(BLUE(BOLD("1 ")));
+    else if (valor == '2')
+        printf(GREEN(BOLD("2 ")));
+    else if (valor == '3')
+        printf(RED(BOLD("3 ")));
+    else if (valor == '4')
+        printf(CYAN(BOLD("4 ")));
+    else if (valor == '5')
+        printf(YELLOW(BOLD("5 ")));
+    else if (valor == '6')
+        printf(MAGENTA(BOLD("6 ")));
+    else if (valor == '7')
+        printf(BLACK(BOLD("7 ")));
+    else if (valor == '8')
+        printf(WHITE(BOLD("8 ")));
+    else if (valor == 'B')
+        printf(BG_RED(BOLD("B ")));
+    else if (valor == ' ')
+        printf("  ");
+    else if (valor == '-') printf(BOLD("- "));
+    else printf(BOLD("X "));
+}
+
+void vitoria() {
+    int cont = 3;
+    usleep(900000);
+    system("clear");
+        
+    while (cont--) {
+        printf(GREEN("***      ***   *******    ***  ***\n"));
+        printf(GREEN(" ***    ***   ***   ***   ***  ***\n"));
+        printf(GREEN("  ***  ***    ***   ***   ***  ***\n"));
+        printf(GREEN("   ******     ***   ***   ***  ***\n"));
+        printf(GREEN("    ****      ***   ***   ***  ***\n"));
+        printf(GREEN("    ****      ***   ***   ***  ***\n"));
+        printf(GREEN("    ****      ***   ***   ********\n"));
+        printf(GREEN("    ****       *******    ********\n"));
+        
+        usleep(900000);
+        system("clear");
+        
+        printf(GREEN(" ***         ***   ***   ******      ***\n"));
+        printf(GREEN(" ***         ***   ***   ******      ***\n"));
+        printf(GREEN(" ***         ***         *** ***     ***\n"));
+        printf(GREEN(" ***         ***   ***   ***  ***    ***\n"));
+        printf(GREEN(" ***         ***   ***   ***   ***   ***\n"));
+        printf(GREEN(" ***   ***   ***   ***   ***    ***  ***\n"));
+        printf(GREEN(" *** *** *** ***   ***   ***     *** ***\n"));
+        printf(GREEN("  *****   *****    ***   ***      ******\n"));
+        
+        usleep(900000);
+        system("clear");
+    }
+}
+
+void derrota() {
+    int cont = 3;
+    usleep(900000);
+    system("clear");
+        
+    while (cont--) {
+        printf(RED("***      ***   *******    ***  ***\n"));
+        printf(RED(" ***    ***   ***   ***   ***  ***\n"));
+        printf(RED("  ***  ***    ***   ***   ***  ***\n"));
+        printf(RED("   ******     ***   ***   ***  ***\n"));
+        printf(RED("    ****      ***   ***   ***  ***\n"));
+        printf(RED("    ****      ***   ***   ***  ***\n"));
+        printf(RED("    ****      ***   ***   ********\n"));
+        printf(RED("    ****       *******    ********\n"));
+        
+        usleep(900000);
+        system("clear");
+        
+        printf(RED("***        *******    ******   ******\n"));
+        printf(RED("***       ***   ***   ******   ******\n"));
+        printf(RED("***       ***   ***   ***      ***   \n"));
+        printf(RED("***       ***   ***   ******   ******\n"));
+        printf(RED("***       ***   ***   ******   ******\n"));
+        printf(RED("***       ***   ***      ***   ***   \n"));
+        printf(RED("*******   ***   ***   ******   ******\n"));
+        printf(RED("*******    *******    ******   ******\n"));
+        
+        usleep(900000);
+        system("clear");
+    }
+}
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
